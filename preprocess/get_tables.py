@@ -28,8 +28,8 @@ def convert_fk_index(data):
                 fk_holder.append([cid, ref_cid])
         except:
             traceback.print_exc()
-            print "table_names_original: ", data["table_names_original"]
-            print "finding tab name: ", tn, ref_tn
+            print("table_names_original: ", data["table_names_original"])
+            print("finding tab name: ", tn, ref_tn)
             sys.exit()
     return fk_holder
 
@@ -104,7 +104,9 @@ def dump_db_json_schema(db, f):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print "Usage: python get_tables.py [dir includes many subdirs containing database.sqlite files] [output file name e.g. output.json] [existing tables.json file to be inherited]"
+        print(
+            "Usage: python get_tables.py [dir includes many subdirs containing database.sqlite files] [output file name e.g. output.json] [existing tables.json file to be inherited]"
+        )
         sys.exit()
     input_dir = sys.argv[1]
     output_file = sys.argv[2]
@@ -118,14 +120,14 @@ if __name__ == "__main__":
         # for tab in ex_tabs:
         #    tab["foreign_keys"] = convert_fk_index(tab)
         ex_tabs = {tab["db_id"]: tab for tab in ex_tabs if tab["db_id"] in all_fs}
-        print "precessed file num: ", len(ex_tabs)
+        print("precessed file num: ", len(ex_tabs))
     not_fs = [
         df
         for df in listdir(input_dir)
         if not exists(join(input_dir, df, df + ".sqlite"))
     ]
     for d in not_fs:
-        print "no sqlite file found in: ", d
+        print("no sqlite file found in: ", d)
     db_files = [
         (df + ".sqlite", df)
         for df in listdir(input_dir)
@@ -137,7 +139,7 @@ if __name__ == "__main__":
         # print 'reading old db: ', df
         #    tables.append(ex_tabs[df])
         db = join(input_dir, df, f)
-        print "\nreading new db: ", df
+        print("\nreading new db: ", df)
         table = dump_db_json_schema(db, df)
         prev_tab_num = len(ex_tabs[df]["table_names"])
         prev_col_num = len(ex_tabs[df]["column_names"])
@@ -153,8 +155,8 @@ if __name__ == "__main__":
             table["table_names"] = ex_tabs[df]["table_names"]
             table["column_names"] = ex_tabs[df]["column_names"]
         else:
-            print "\n----------------------------------problem db: ", df
+            print("\n----------------------------------problem db: ", df)
         tables.append(table)
-    print "final db num: ", len(tables)
+    print("final db num: ", len(tables))
     with open(output_file, "wt") as out:
         json.dump(tables, out, sort_keys=True, indent=2, separators=(",", ": "))
