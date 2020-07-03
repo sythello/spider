@@ -39,9 +39,7 @@ class Schema:
         return idMap
 
 
-def get_schemas_from_json(fpath):
-    with open(fpath) as f:
-        data = json.load(f)
+def _get_schemas_from_json(data: dict):
     db_names = [db["db_id"] for db in data]
 
     tables = {}
@@ -62,3 +60,9 @@ def get_schemas_from_json(fpath):
         schemas[db_id] = schema
 
     return schemas, db_names, tables
+
+
+def get_schemas_from_json(fpath):
+    with open(fpath) as f:
+        data = json.load(f)
+    return _get_schemas_from_json(data)
