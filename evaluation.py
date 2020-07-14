@@ -639,35 +639,7 @@ class Evaluator:
         if self.etype in ["all", "match"]:
             partial_scores = self.eval_partial_match(p_sql, g_sql)
             exact_score = self.eval_exact_match(p_sql, g_sql, partial_scores)
-            self.scores[hardness]["exact"] += exact_score
-            self.scores["all"]["exact"] += exact_score
-            for type_ in PARTIAL_TYPES:
-                if partial_scores[type_]["pred_total"] > 0:
-                    self.scores[hardness]["partial"][type_]["acc"] += partial_scores[
-                        type_
-                    ]["acc"]
-                    self.scores[hardness]["partial"][type_]["acc_count"] += 1
-                if partial_scores[type_]["label_total"] > 0:
-                    self.scores[hardness]["partial"][type_]["rec"] += partial_scores[
-                        type_
-                    ]["rec"]
-                    self.scores[hardness]["partial"][type_]["rec_count"] += 1
-                self.scores[hardness]["partial"][type_]["f1"] += partial_scores[type_][
-                    "f1"
-                ]
-                if partial_scores[type_]["pred_total"] > 0:
-                    self.scores["all"]["partial"][type_]["acc"] += partial_scores[
-                        type_
-                    ]["acc"]
-                    self.scores["all"]["partial"][type_]["acc_count"] += 1
-                if partial_scores[type_]["label_total"] > 0:
-                    self.scores["all"]["partial"][type_]["rec"] += partial_scores[
-                        type_
-                    ]["rec"]
-                    self.scores["all"]["partial"][type_]["rec_count"] += 1
-                self.scores["all"]["partial"][type_]["f1"] += partial_scores[type_][
-                    "f1"
-                ]
+            update_scores_match(self.scores, exact_score, hardness, partial_scores, PARTIAL_TYPES)
 
         return {
             "predicted": predicted,
@@ -679,47 +651,82 @@ class Evaluator:
         }
 
     def finalize(self):
-        scores = self.scores
-        for level in LEVELS:
-            if scores[level]["count"] == 0:
-                continue
-            if self.etype in ["all", "exec"]:
-                scores[level]["exec"] /= scores[level]["count"]
+        finalize(self.scores, self.etype, PARTIAL_TYPES)
 
-            if self.etype in ["all", "match"]:
-                scores[level]["exact"] /= scores[level]["count"]
-                for type_ in PARTIAL_TYPES:
-                    if scores[level]["partial"][type_]["acc_count"] == 0:
-                        scores[level]["partial"][type_]["acc"] = 0
-                    else:
-                        scores[level]["partial"][type_]["acc"] = (
+
+def update_scores_match(scores, exact_score, hardness, partial_scores, partial_types):
+    scores[hardness]["exact"] += exact_score
+    scores["all"]["exact"] += exact_score
+    for type_ in partial_types:
+        if partial_scores[type_]["pred_total"] > 0:
+            scores[hardness]["partial"][type_]["acc"] += partial_scores[
+                type_
+            ]["acc"]
+            scores[hardness]["partial"][type_]["acc_count"] += 1
+        if partial_scores[type_]["label_total"] > 0:
+            scores[hardness]["partial"][type_]["rec"] += partial_scores[
+                type_
+            ]["rec"]
+            scores[hardness]["partial"][type_]["rec_count"] += 1
+        scores[hardness]["partial"][type_]["f1"] += partial_scores[type_][
+            "f1"
+        ]
+        if partial_scores[type_]["pred_total"] > 0:
+            scores["all"]["partial"][type_]["acc"] += partial_scores[
+                type_
+            ]["acc"]
+            scores["all"]["partial"][type_]["acc_count"] += 1
+        if partial_scores[type_]["label_total"] > 0:
+            scores["all"]["partial"][type_]["rec"] += partial_scores[
+                type_
+            ]["rec"]
+            scores["all"]["partial"][type_]["rec_count"] += 1
+        scores["all"]["partial"][type_]["f1"] += partial_scores[type_][
+            "f1"
+        ]
+
+
+def finalize(scores, etype, partial_types):
+    for level in LEVELS:
+        if scores[level]["count"] == 0:
+            continue
+        if etype in ["all", "exec"]:
+            scores[level]["exec"] /= scores[level]["count"]
+
+        if etype in ["all", "match"]:
+            scores[level]["exact"] /= scores[level]["count"]
+            for type_ in partial_types:
+                if scores[level]["partial"][type_]["acc_count"] == 0:
+                    scores[level]["partial"][type_]["acc"] = 0
+                else:
+                    scores[level]["partial"][type_]["acc"] = (
                             scores[level]["partial"][type_]["acc"]
                             / scores[level]["partial"][type_]["acc_count"]
                             * 1.0
-                        )
-                    if scores[level]["partial"][type_]["rec_count"] == 0:
-                        scores[level]["partial"][type_]["rec"] = 0
-                    else:
-                        scores[level]["partial"][type_]["rec"] = (
+                    )
+                if scores[level]["partial"][type_]["rec_count"] == 0:
+                    scores[level]["partial"][type_]["rec"] = 0
+                else:
+                    scores[level]["partial"][type_]["rec"] = (
                             scores[level]["partial"][type_]["rec"]
                             / scores[level]["partial"][type_]["rec_count"]
                             * 1.0
-                        )
-                    if (
+                    )
+                if (
                         scores[level]["partial"][type_]["acc"] == 0
                         and scores[level]["partial"][type_]["rec"] == 0
-                    ):
-                        scores[level]["partial"][type_]["f1"] = 1
-                    else:
-                        scores[level]["partial"][type_]["f1"] = (
+                ):
+                    scores[level]["partial"][type_]["f1"] = 1
+                else:
+                    scores[level]["partial"][type_]["f1"] = (
                             2.0
                             * scores[level]["partial"][type_]["acc"]
                             * scores[level]["partial"][type_]["rec"]
                             / (
-                                scores[level]["partial"][type_]["rec"]
-                                + scores[level]["partial"][type_]["acc"]
+                                    scores[level]["partial"][type_]["rec"]
+                                    + scores[level]["partial"][type_]["acc"]
                             )
-                        )
+                    )
 
 
 def isValidSQL(sql, db):
