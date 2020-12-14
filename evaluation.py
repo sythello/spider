@@ -1079,6 +1079,8 @@ def build_foreign_key_map_from_json(table):
 
 
 def main(gold, pred, db_dir, table, etype, output):
+    if etype not in ['match', 'exec', 'all']:
+        raise ValueError()
     kmaps = build_foreign_key_map_from_json(table)
 
     results = evaluate(gold, pred, db_dir, etype, kmaps)
