@@ -814,7 +814,7 @@ def evaluate(gold, predict, db_dir, etype, kmaps):
     evaluator = Evaluator(db_dir, kmaps, etype)
     results = []
     for p, g in zip(plist, glist):
-        (predicted,) = p
+        predicted, db_name = p
         gold, db_name = g
         results.append(evaluator.evaluate_one(db_name, gold, predicted))
     evaluator.finalize()
@@ -1078,27 +1078,12 @@ def build_foreign_key_map_from_json(table):
     return tables
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--gold", dest="gold", type=str)
-    parser.add_argument("--pred", dest="pred", type=str)
-    parser.add_argument("--db", dest="db", type=str)
-    parser.add_argument("--table", dest="table", type=str)
-    parser.add_argument("--etype", dest="etype", type=str)
-    parser.add_argument("--output")
-    args = parser.parse_args()
-
-    gold = args.gold
-    pred = args.pred
-    db_dir = args.db
-    table = args.table
-    etype = args.etype
-
-    assert etype in ["all", "exec", "match"], "Unknown evaluation method"
-
+def main(gold, pred, db_dir, table, etype, output):
+    if etype not in ['match', 'exec', 'all']:
+        raise ValueError()
     kmaps = build_foreign_key_map_from_json(table)
 
     results = evaluate(gold, pred, db_dir, etype, kmaps)
-    if args.output:
-        with open(args.output, "w") as f:
+    if output:
+        with open(output, "w") as f:
             json.dump(results, f)
