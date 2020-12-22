@@ -195,14 +195,23 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
     """
         :returns next idx, column id
     """
-    tok = toks[start_idx]
-    if tok == "*":
-        return start_idx + 1, schema.idMap[tok]
+    idx = start_idx
+    tok = toks[idx]
+    in_parentheses = False
+    col_id = None
+
+    if tok == '(':
+        in_parentheses = True
+        idx += 1
+        tok = toks[idx]
+
+    if tok in ['1', '*']:
+        col_id = schema.idMap['*']
 
     if "." in tok:  # if token is a composite
         alias, col = tok.split(".")
         key = tables_with_alias[alias] + "." + col
-        return start_idx + 1, schema.idMap[key]
+        col_id = schema.idMap[key]
 
     assert (
         default_tables is not None and len(default_tables) > 0
@@ -212,9 +221,16 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
         table = tables_with_alias[alias]
         if tok in schema.schema[table]:
             key = table + "." + tok
-            return start_idx + 1, schema.idMap[key]
+            col_id = schema.idMap[key]
 
-    assert False, "Error col: {}".format(tok)
+    assert col_id, "Error col: {}".format(tok)
+
+    if in_parentheses:
+        assert toks[idx + 1] == ')'
+        return idx + 2, col_id
+    else:
+        return idx + 1, col_id
+
 
 
 def parse_col_unit(toks, start_idx, tables_with_alias, schema, default_tables=None):
@@ -444,7 +460,7 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
             idx, sql = parse_sql(toks, idx, tables_with_alias, schema)
             table_units.append((TABLE_TYPE["sql"], sql))
         else:
-            if idx < len_ and toks[idx] == "join":
+            if idx < len_ and toks[idx] in [",", "join"]:
                 idx += 1  # skip join
             idx, table_unit, table_name = parse_table_unit(
                 toks, idx, tables_with_alias, schema
