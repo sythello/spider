@@ -77,6 +77,9 @@ class DerivedTableAliasError(ValueError):
 class ParenthesesInConditionError(ValueError):
     pass
 
+class ValueListError(ValueError):
+    pass
+
 
 class Schema:
     """
@@ -367,6 +370,8 @@ def parse_value(toks, start_idx, tables_with_alias, schema, default_tables=None)
             idx = end_idx
 
     if isBlock:
+        if toks[idx] == ',':
+            raise ValueListError()
         assert toks[idx] == ")"
         idx += 1
 
