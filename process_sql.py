@@ -241,7 +241,7 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
         if tok == 'as':
             raise DerivedFieldAliasError(toks[idx + 1])
         else:
-            assert "Error col: {}".format(tok)
+            assert False, "Error col: {}".format(tok)
 
     if in_parentheses:
         assert toks[idx + 1] == ')'
