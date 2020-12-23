@@ -487,7 +487,7 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
         else:
             if idx < len_ and toks[idx] in [",", "join"]:
                 idx += 1  # skip join
-            if idx + 1 < len_ and toks[idx:idx + 2] == ["inner", "join"]:
+            elif idx + 1 < len_ and toks[idx:idx + 2] == ["inner", "join"]:
                 idx += 2  # skip join
             idx, table_unit, table_name = parse_table_unit(
                 toks, idx, tables_with_alias, schema
