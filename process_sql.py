@@ -68,6 +68,16 @@ SQL_OPS = ("intersect", "union", "except")
 ORDER_OPS = ("desc", "asc")
 
 
+class DerivedFieldAliasError(ValueError):
+    pass
+
+class DerivedTableAliasError(ValueError):
+    pass
+
+class ParenthesesInConditionError(ValueError):
+    pass
+
+
 class Schema:
     """
     Simple schema which maps table&column to a unique identifier
@@ -224,7 +234,11 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
             key = table + "." + tok
             col_id = schema.idMap[key]
 
-    assert col_id, "Error col: {}".format(tok)
+    if col_id is None:
+        if tok == 'as':
+            raise DerivedFieldAliasError(toks[idx + 1])
+        else:
+            assert "Error col: {}".format(tok)
 
     if in_parentheses:
         assert toks[idx + 1] == ')'
@@ -365,6 +379,9 @@ def parse_condition(toks, start_idx, tables_with_alias, schema, default_tables=N
     conds = []
 
     while idx < len_:
+        if toks[idx]  == '(':
+            raise ParenthesesInConditionError()
+
         idx, val_unit = parse_val_unit(
             toks, idx, tables_with_alias, schema, default_tables
         )
