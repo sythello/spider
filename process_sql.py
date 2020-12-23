@@ -41,20 +41,21 @@ CLAUSE_KEYWORDS = (
 )
 JOIN_KEYWORDS = ("join", "on", "as")
 
-WHERE_OPS = (
-    "not",
-    "between",
-    "=",
-    ">",
-    "<",
-    ">=",
-    "<=",
-    "!=",
-    "in",
-    "like",
-    "is",
-    "exists",
-)
+WHERE_OPS = {
+    "not": 0,
+    "between": 1,
+    "=": 2,
+    ">": 3,
+    "<": 4,
+    ">=": 5,
+    "<=": 6,
+    "!=": 7,
+    "in": 8,
+    "like": 9,
+    "is": 10,
+    "exists": 11,
+    "<>": 7
+}
 UNIT_OPS = ("none", "-", "+", "*", "/")
 AGG_OPS = ("none", "max", "min", "count", "sum", "avg")
 TABLE_TYPE = {
@@ -162,14 +163,14 @@ def tokenize(string):
         if toks[i] in vals:
             toks[i] = vals[toks[i]]
 
-    # find if there exists !=, >=, <=
-    eq_idxs = [idx for idx, tok in enumerate(toks) if tok == "="]
+    # find if there exists !=, >=, <=, <>`
+    eq_idxs = [idx for idx, tok in enumerate(toks) if tok in ("=", ">")]
     eq_idxs.reverse()
     prefix = ("!", ">", "<")
     for eq_idx in eq_idxs:
         pre_tok = toks[eq_idx - 1]
         if pre_tok in prefix:
-            toks = toks[: eq_idx - 1] + [pre_tok + "="] + toks[eq_idx + 1 :]
+            toks = toks[: eq_idx - 1] + [pre_tok + toks[eq_idx]] + toks[eq_idx + 1 :]
 
     return toks
 
@@ -375,12 +376,11 @@ def parse_condition(toks, start_idx, tables_with_alias, schema, default_tables=N
         assert (
             idx < len_ and toks[idx] in WHERE_OPS
         ), "Error condition: idx: {}, tok: {}".format(idx, toks[idx])
-        op_id = WHERE_OPS.index(toks[idx])
+        op_id = WHERE_OPS[toks[idx]]
         idx += 1
         val1 = val2 = None
-        if op_id == WHERE_OPS.index(
-            "between"
-        ):  # between..and... special case: dual values
+        if op_id == WHERE_OPS['between']:
+             # between..and... special case: dual values
             idx, val1 = parse_value(
                 toks, idx, tables_with_alias, schema, default_tables
             )
