@@ -456,12 +456,17 @@ def parse_from(toks, start_idx, tables_with_alias, schema):
             isBlock = True
             idx += 1
 
+        if toks[idx] == 'as':
+            raise DerivedTableAliasError()
+
         if toks[idx] == "select":
             idx, sql = parse_sql(toks, idx, tables_with_alias, schema)
             table_units.append((TABLE_TYPE["sql"], sql))
         else:
             if idx < len_ and toks[idx] in [",", "join"]:
                 idx += 1  # skip join
+            if idx + 1 < len_ and toks[idx:idx + 2] == ["inner", "join"]:
+                idx += 2  # skip join
             idx, table_unit, table_name = parse_table_unit(
                 toks, idx, tables_with_alias, schema
             )

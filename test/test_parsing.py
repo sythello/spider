@@ -19,11 +19,13 @@ def test_parse_col():
                    'SELECT DISTINCT papers.id FROM papers')['select'] == ground_truth
 
 
-def test_comma_joins():
+def test_joins():
     ground_truth = {'conds': [],
                     'table_units': [('table_unit', '__papers__'), ('table_unit', '__coauthored__')]}
     assert get_sql(test_schema(),
                    'SELECT * FROM papers JOIN coauthored')['from'] == ground_truth
+    assert get_sql(test_schema(),
+                   'SELECT * FROM papers INNER JOIN coauthored')['from'] == ground_truth
     assert get_sql(test_schema(),
                    'SELECT * FROM papers, coauthored')['from'] == ground_truth
 
