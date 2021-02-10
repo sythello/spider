@@ -227,7 +227,7 @@ def parse_col(toks, start_idx, tables_with_alias, schema, default_tables=None):
         key = tables_with_alias[alias] + "." + col
         col_id = schema.idMap[key]
 
-    assert (
+    assert col_id is not None or (
         default_tables is not None and len(default_tables) > 0
     ), "Default tables should not be None or empty"
 
