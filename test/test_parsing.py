@@ -18,6 +18,10 @@ def test_parse_col():
     assert get_sql(test_schema(),
                    'SELECT DISTINCT papers.id FROM papers')['select'] == ground_truth
 
+    ground_truth = (False, [(3, (0, (0, '__all__', False), None))])
+    assert get_sql(test_schema(),
+                   'SELECT COUNT(*) FROM (SELECT papers.id FROM papers)')['select'] == ground_truth
+
 
 def test_joins():
     ground_truth = {'conds': [],
