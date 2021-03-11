@@ -1087,3 +1087,16 @@ def main(gold, pred, db_dir, table, etype, output):
     if output:
         with open(output, "w") as f:
             json.dump(results, f)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gold", dest="gold", type=str)
+    parser.add_argument("--pred", dest="pred", type=str)
+    parser.add_argument("--db", dest="db", type=str)
+    parser.add_argument("--table", dest="table", type=str)
+    parser.add_argument("--etype", dest="etype", type=str)
+    parser.add_argument("--output")
+    args = parser.parse_args()
+
+    main(args.gold, args.pred, args.db, args.table, args.etype, args.output)
