@@ -2,9 +2,11 @@
 
 Spider is a large human-labeled dataset for complex and cross-domain semantic parsing and text-to-SQL task (natural language interfaces for relational databases). It is released along with our EMNLP 2018 paper: [Spider: A Large-Scale Human-Labeled Dataset for Complex and Cross-Domain Semantic Parsing and Text-to-SQL Task](https://arxiv.org/abs/1809.08887). This repo contains all code for evaluation, preprocessing, and all baselines used in our paper. Please refer to [the task site](https://yale-lily.github.io/spider) for more general introduction and the leaderboard.
 
+:+1: `03/20/2022`: **We open-sourced a simple but SOTA model (just T5) for the task! Please check out our code in the [UnifiedSKG repo](https://github.com/hkunlp/unifiedskg)!!**
 
 ### Changelog
-
+-`11/15/2020` We will use [Test Suite Accuracy](https://arxiv.org/abs/2010.02840) as our official evaluation metric for Spider, SParC, and CoSQL. Please find the evaluation code from [here](https://github.com/taoyds/test-suite-sql-eval).
+- `08/03/2020` Corrected `column_name` and `column_name_original` mismatches in 2 dbs (`scholar` and `formula_1`) in `tables.json`, and reparsed SQL queries (this only affects some models (e.g. RATSQL) which use our parsed SQL as the SQL input). Please download the Spider dataset from [the page](https://yale-lily.github.io/spider) again.
 - `06/07/2020` We corrected some annotation errors and label mismatches (not errors) in Spider dev and test sets (~4% of dev examples updated, click [here](https://github.com/taoyds/spider/commit/25fcd85d9b6e94acaeb5e9172deadeefeed83f5e#diff-18b0a730a7b0d29b0a78a5070d971d49) for more details). Please download the Spider dataset from [the page](https://yale-lily.github.io/spider) again.
 - `01/16/2020` For value prediction (in order to compute the execution accuracy), your model should be able to 1) copy from the question inputs, 2) retrieve from the database content (database content is available), or 3) generate numbers (e.g. 3 in "LIMIT 3").
 - `1/14/2019` The submission toturial is ready! Please follow it to get your results on the unreleased test data.
@@ -208,6 +210,7 @@ All table contents are contained in corresponding SQLite3 database files.
 
 ### Evaluation
 
+Update 11/15/20: We will use [Test Suite Accuracy](https://arxiv.org/abs/2010.02840) as our official evaluation metric for Spider, SParC, and CoSQL. Please find the evaluation code from [here](https://github.com/taoyds/test-suite-sql-eval).
 Our evaluation metrics include Component Matching, Exact Matching, and Execution Accuracy. For component and exact matching evaluation, instead of simply conducting string comparison between the predicted and gold SQL queries, we decompose each SQL into several clauses, and conduct set comparison in each SQL clause. 
 
 For Execution Accuracy, our current models do not predict any value in SQL conditions so that we do not provide execution accuracies. However, we encourage you to provide it in the future submissions. For value prediction, you can assume that a list of gold values for each question is given. Your model has to fill them into the right slots in the SQL.
