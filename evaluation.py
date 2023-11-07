@@ -628,13 +628,45 @@ class Evaluator:
         g_sql = rebuild_sql_val(g_sql)
         g_sql = rebuild_sql_col(g_valid_col_units, g_sql, kmap)
         p_valid_col_units = build_valid_col_units(p_sql["from"]["table_units"], schema)
-        p_sql = rebuild_sql_val(p_sql)
-        p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
+        try:
+            p_sql = rebuild_sql_val(p_sql)
+            p_sql = rebuild_sql_col(p_valid_col_units, p_sql, kmap)
+        except Exception as e:
+            # YS NOTE: some SQL can pass the parsing above but still have syntax error, skip here
+            # breakpoint()
+            print(f'** Error with predicted SQL: `{predicted}`')
+            print('Passing initial parsing but fail rebuilding, set back to parse_error = True')
+            parse_error = True
+            p_sql = {
+                "except": None,
+                "from": {"conds": [], "table_units": []},
+                "groupBy": [],
+                "having": [],
+                "intersect": None,
+                "limit": None,
+                "orderBy": [],
+                "select": [False, []],
+                "union": None,
+                "where": [],
+            }
+
+        exec_score = None
+        partial_scores = None
+        exact_score = None
 
         if self.etype in ["all", "exec"]:
-            self.scores[hardness]["exec"] += eval_exec_match(
-                self.db_paths[db_name], predicted, gold, p_sql, g_sql
-            )
+            # YS NOTE: why not return exec match...? Since compute_exact_match_metric() won't refer to it, so shouldn't hurt
+            # self.scores[hardness]["exec"] += eval_exec_match(
+            #     self.db_paths[db_name], predicted, gold, p_sql, g_sql
+            # )
+            try:
+                exec_score = eval_exec_match(
+                    self.db_paths[db_name], predicted, gold, p_sql, g_sql
+                )
+                exec_score = int(exec_score)
+            except:
+                exec_score = 0
+            self.scores[hardness]["exec"] += exec_score
 
         if self.etype in ["all", "match"]:
             partial_scores = self.eval_partial_match(p_sql, g_sql)
@@ -648,6 +680,7 @@ class Evaluator:
             "hardness": hardness,
             "exact": exact_score,
             "partial": partial_scores,
+            "exec": exec_score,
         }
 
     def finalize(self):
